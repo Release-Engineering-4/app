@@ -1,6 +1,15 @@
-from flask import Flask, render_template, jsonify, request
-from flasgger import Swagger
+import os
 import requests
+from flask import Flask, render_template, jsonify, request
+from libversion import version_util
+
+# load class
+lv = version_util.VersionUtil()
+ver = lv.get_version()
+
+# get environment variables from docker ran command
+model_url = os.getenv('MODEL_URL', 'http://localhost:5000/process_link')
+
 
 # load frontend
 app = Flask(__name__)
@@ -14,7 +23,7 @@ def index():
         "index.html",
         inputDisplay="",
         result="",
-        version="test"
+        version=ver
     )
 
 @app.route('/predict')
@@ -24,7 +33,7 @@ def predict():
     data = {"url": url}
     # TODO implement environment variable for the url
     # it is hardcoded at the momeent
-    response = requests.post('http://localhost:5000/process_link', json=data)
+    response = requests.post(model_url, json=data)
 
     # Extract result form response
     response_request = response.json()
@@ -34,7 +43,7 @@ def predict():
         "results.html",
         inputDisplay=url,
         result=response_request['result'],
-        version="test"
+        version=ver
     )
 
 @app.route('/url_was_phising')

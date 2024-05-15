@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
+
 import requests
 import random
+
 
 app = Flask(__name__)
 
@@ -23,4 +25,4 @@ def call_model(data):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=6000, debug=True)
