@@ -22,11 +22,14 @@
         click the "Check" button.
     </div>
     <form action="/predict">
-        <input type="text" id="link" name="link" placeholder="Enter link here">
+        <input type="text" id="url" name="url" placeholder="Enter url here">
         <button type="submit">Check</button>
     </form>
 
     <p id="inputDisplay">Input: {{ inputDisplay }}</p>
     <p id="result">{{ result }}</p>
+
+    
+    <p><strong>Version:</strong> {{ version }}</p>
 </body>
 </html>
