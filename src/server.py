@@ -4,6 +4,7 @@ import requests
 
 # load frontend
 app = Flask(__name__)
+# TODO implement swagger documentation
 
 @app.route('/')
 @app.route('/index')
@@ -16,11 +17,13 @@ def index():
         version="test"
     )
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict')
 def predict():
     # Get the link from the html page and send it to the service
-    url = request.args.get('url')
-    data = {'url': url}
+    url = request.args.get("url")
+    data = {"url": url}
+    # TODO implement environment variable for the url
+    # it is hardcoded at the momeent
     response = requests.post('http://localhost:5000/process_link', json=data)
 
     # Extract result form response
@@ -28,11 +31,19 @@ def predict():
     
 
     return render_template(
-        "index.html",
+        "results.html",
         inputDisplay=url,
         result=response_request['result'],
         version="test"
     )
+
+@app.route('/url_was_phising')
+def url_was_phising():
+    return render_template()
+
+@app.route('/url_was_legit')
+def url_was_legit():
+    return render_template()
 
 
 

@@ -4,9 +4,9 @@
 FROM python:3.10-slim
 
 #
-WORKDIR /app
-COPY requirements.txt /app/
+WORKDIR /root
+COPY requirements.txt /root/
 RUN pip install -r requirements.txt
-COPY src/app_frontend /app/app_frontend
+COPY src/ /root/
 ENTRYPOINT [ "python" ]
-CMD [ "app/app_frontend/server.py"]
+CMD ["server.py"]
