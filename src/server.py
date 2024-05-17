@@ -10,7 +10,7 @@ ver = lv.get_version()
 # get environment variables from docker ran command
 model_url = os.getenv('MODEL_URL', 'http://localhost:5000/process_link')
 
-
+print(model_url)
 # load frontend
 app = Flask(__name__)
 # TODO implement swagger documentation
