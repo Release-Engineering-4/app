@@ -10,7 +10,7 @@ ver = lv.get_version()
 # get environment variables from docker ran command
 model_url = os.getenv('MODEL_URL', 'http://localhost:5000/process_link')
 
-print(model_url)
+print(f"Using model_url: {model_url}")
 # load frontend
 app = Flask(__name__)
 # TODO implement swagger documentation
@@ -31,8 +31,7 @@ def predict():
     # Get the link from the html page and send it to the service
     url = request.args.get("url")
     data = {"url": url}
-    # TODO implement environment variable for the url
-    # it is hardcoded at the momeent
+    
     response = requests.post(model_url, json=data)
 
     # Extract result form response
