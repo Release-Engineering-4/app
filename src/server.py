@@ -16,6 +16,7 @@ print(f"Using model_url: {model_url}")
 # load frontend
 app = Flask(__name__)
 
+
 @app.route('/')
 @app.route('/index')
 def index():
@@ -29,6 +30,7 @@ def index():
         result="",
         version=ver
     )
+
 
 @app.route('/predict')
 def predict():
@@ -49,6 +51,7 @@ def predict():
         version=ver
     )
 
+
 @app.route('/url_was_phising')
 def url_was_phising():
     '''
@@ -56,6 +59,7 @@ def url_was_phising():
     Returns: The phising web template.
     '''
     return
+
 
 @app.route('/url_was_legit')
 def url_was_legit():
@@ -65,8 +69,10 @@ def url_was_legit():
     '''
     return
 
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)
+
 
 def run_frontend():
     '''

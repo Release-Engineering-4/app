@@ -13,6 +13,7 @@ requests = "2.31.0"
 flasgger = "0.9.4"
 lib-version = {git = "https://github.com/Release-Engineering-4/lib-version", rev = "main"}
 pylint = "^3.2.2"
+flake8 = "^7.0.0"
 
 
 [build-system]
