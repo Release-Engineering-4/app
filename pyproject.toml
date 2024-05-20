@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = ["Ming Da Yang <m.d.yang@student.tudelft.nl>"]
+readme = "README.md"
+package-mode = false 
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "2.2.4"
+requests = "2.31.0"
+flasgger = "0.9.4"
+lib-version = {git = "https://github.com/Release-Engineering-4/lib-version", rev = "main"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
