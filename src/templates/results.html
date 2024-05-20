@@ -22,11 +22,26 @@
         click the "Check" button.
     </div>
     <form action="/predict">
-        <input type="text" id="link" name="link" placeholder="Enter link here">
+        <input type="text" id="url" name="url" placeholder="Enter url here">
         <button type="submit">Check</button>
     </form>
 
-    <p id="inputDisplay">Input: {{ inputDisplay }}</p>
-    <p id="result">{{ result }}</p>
+    <p id="inputDisplay"><strong>Input:</strong> {{ inputDisplay }}</p>
+    <p id="result"><strong>Result:</strong> {{ result }}</p>
+
+    <div>
+        Is this result not correct? Help us improve the model by letting us know what it should've been!
+    </div>
+    <div>
+        <form action="/url_was_phishing" style="display: inline;">
+            <button type="submit">URL was phishing</button>
+        </form>
+        <form action="/url_was_legit" style="display: inline;">
+            <button type="submit">URL was legit</button>
+        </form>
+    </div>
+
+    
+    <p><strong>Version:</strong> {{ version }}</p>
 </body>
 </html>

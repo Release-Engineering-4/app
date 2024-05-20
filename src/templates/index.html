@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>remla24-team04 Phishing Link Detector</title>
+    <link href="{{url_for('static', filename='styles.css')}}
+    " rel="stylesheet" />
 </head>
 <body>
     <h1>Phishing Link detector</h1>
@@ -17,15 +21,15 @@
         to help you detect phishing links. Simply enter the link you want to check in the input field below and 
         click the "Check" button.
     </div>
-    <script src="./javascript/logic.js"></script>
-  
-    <input type="text" id="inputField" placeholder="Enter link here">
-    <button onclick="checkFraud()">Check</button>
+    <form action="/predict">
+        <input type="text" id="url" name="url" placeholder="Enter url here">
+        <button type="submit">Check</button>
+    </form>
+
+    <p id="inputDisplay">Input: {{ inputDisplay }}</p>
+    <p id="result">{{ result }}</p>
+
     
-    <p id="inputDisplay">Input:</p>
-    <p id="result"></p>
-    
-    
-   
+    <p><strong>Version:</strong> {{ version }}</p>
 </body>
 </html>
