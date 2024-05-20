@@ -60,6 +60,11 @@ jobs:
             .
           docker push --all-tags $IMG
 
+      - name: Update Kubernetes Manifests
+        run: |
+          sed -i "s|ghcr.io/release-engineering-4/app:latest|ghcr.io/${{steps.lower-repo.outputs.repository}}:${{env.version}}|g" kubernetes.yml
+    
+
       - name: Deploy to minikube
         run:
           kubectl apply -f kubernetes.yml
