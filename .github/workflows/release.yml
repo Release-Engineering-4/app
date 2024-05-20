@@ -64,10 +64,17 @@ jobs:
         run: |
           sed -i "s|ghcr.io/release-engineering-4/app:latest|ghcr.io/${{steps.lower-repo.outputs.repository}}:${{env.version}}|g" kubernetes.yml
     
-
       - name: Deploy to minikube
         run:
           kubectl apply -f kubernetes.yml
+
+      - name: Wait for Deployment to Complete
+        run: |
+          kubectl rollout status deployment/app
+        
+      - name: Check Pod Status
+        run: |
+          kubectl get pods -l app=app
           
       - name: Test service URLs
         run: |
