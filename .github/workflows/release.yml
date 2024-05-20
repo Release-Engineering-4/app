@@ -1,16 +1,16 @@
 name: Release
-on: push
-  # push:
-  #   tags:
-  #     - 'a*'
-  # pull_request:
-  #   types:
-  #     - closed
-  #   branches:
-  #     - main
+on:
+  push:
+    tags:
+      - 'a*'
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 jobs:
   build:
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,14 +67,6 @@ jobs:
       - name: Deploy to minikube
         run:
           kubectl apply -f kubernetes.yml
-
-      - name: Wait for Deployment to Complete
-        run: |
-          kubectl rollout status deployment/app
-        
-      - name: Check Pod Status
-        run: |
-          kubectl get pods -l app=app
           
       - name: Test service URLs
         run: |
