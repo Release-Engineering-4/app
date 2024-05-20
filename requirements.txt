@@ -1,4 +1,5 @@
 flask==2.2.4
+pylint==2.12.2
 requests==2.31.0
 flasgger==0.9.4
 lib-version @ git+https://github.com/Release-Engineering-4/lib-version@main
