@@ -1,22 +1,40 @@
 name: Release
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    tags:
+      - 'a*'
+  pull_request:
+    types:
+      - opened
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: lower-repo
         name: Repository to lowercase
         run: |
           echo "repository=${GITHUB_REPOSITORY@L}" >> $GITHUB_OUTPUT
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.11
+  
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: poetry install
+      
       - name: Registry Login (ghcr.io)
         run: |
           echo "${{secrets.GH_TOKEN}}" | docker login ghcr.io -u ${{github.actor}} --password-stdin
+      
       - name: Parse version info from tag
         run: |
-          # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
           VERSION=${GITHUB_REF:11}
           MAJOR=`echo "$VERSION" | cut -d . -f 1`
           MINOR=`echo "$VERSION" | cut -d . -f 2`
@@ -25,6 +43,11 @@ jobs:
           echo "version_major=$MAJOR" >> $GITHUB_ENV
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
+
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@master
+  
       - name: Build and Push Docker Image
         run: |
           IMG=ghcr.io/${{steps.lower-repo.outputs.repository}}
@@ -35,3 +58,14 @@ jobs:
             --tag $IMG:latest \
             .
           docker push --all-tags $IMG
+
+      - name: Deploy to minikube
+        run:
+          kubectl apply -f deploy-to-minikube.yaml
+          
+      - name: Test service URLs
+        run: |
+          minikube service list
+          minikube service example --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service example --url) 
