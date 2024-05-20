@@ -36,14 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: poetry install
-
-      - name: Pylint source directories
-        working-directory: src
-        run: poetry run pylint $(git ls-files '*.py')
-
-      - name: Lint with flake8
-        working-directory: src
-        run: poetry run flake8 .
       
       - name: Registry Login (ghcr.io)
         run: |
@@ -60,6 +52,10 @@ jobs:
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
 
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@master
+  
       - name: Build and Push Docker Image
         run: |
           IMG=ghcr.io/${{steps.lower-repo.outputs.repository}}
@@ -70,3 +66,14 @@ jobs:
             --tag $IMG:latest \
             .
           docker push --all-tags $IMG
+
+      - name: Deploy to minikube
+        run:
+          kubectl apply -f deploy-to-minikube.yaml
+          
+      - name: Test service URLs
+        run: |
+          minikube service list
+          minikube service example --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service example --url) 

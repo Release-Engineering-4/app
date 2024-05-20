@@ -47,10 +47,3 @@ spec:
       name: web-serv
       port:
         number: 8080
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: my-config
-data:
-  model.host: "http :// model-serv :8080"
