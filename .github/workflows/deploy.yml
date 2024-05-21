@@ -24,9 +24,9 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      # - name: Pylint source directories
-      #   working-directory: src
-      #   run: poetry run pylint $(git ls-files '*.py')
+      - name: Pylint source directories
+        working-directory: src
+        run: poetry run pylint $(git ls-files '*.py')
 
       - name: Lint with flake8
         working-directory: src
