@@ -9,10 +9,10 @@ from libversion import version_util
 lv = version_util.VersionUtil()
 ver = lv.get_version()
 
-countIdx = 0
-countPred = 0
-countPredPhishing = 0
-countPredLegit = 0
+count_idx = 0
+count_pred = 0
+count_pred_phish = 0
+count_pred_legit = 0
 
 # get environment variables from docker ran command
 model_url = os.getenv('MODEL_URL', 'http://localhost:5000/process_link')
@@ -29,8 +29,8 @@ def index():
     Load template page and send it to the user.
     Returns: The default web template.
     '''
-    global countIdx
-    countIdx += 1
+    global count_idx
+    count_idx += 1
     return render_template(
         "index.html",
         inputDisplay="",
@@ -45,8 +45,8 @@ def predict():
     Define the /predict route.
     Returns: The results web template.
     '''
-    global countPred
-    countPred += 1
+    global count_pred
+    count_pred += 1
     # Get the link from the html page and send it to the service
     url = request.args.get("url")
     data = {"url": url}
@@ -67,8 +67,8 @@ def url_was_phising():
     Define the /url_was_phising route.
     Returns: The phising web template.
     '''
-    global countPredPhishing
-    countPredPhishing += 1
+    global count_pred_phish
+    count_pred_phish += 1
     return
 
 
@@ -78,23 +78,25 @@ def url_was_legit():
     Define the /url_was_legit route.
     Returns: The legit web template.
     '''
-    global countPredLegit
-    countPredLegit += 1
+    global count_pred_legit
+    count_pred_legit += 1
     return
 
 @app.route('/metrics')
 def show_site_metrics():
-    global countIdx, countPred, countPredPhishing, countPredLegit
+    global count_idx, count_pred, count_pred_phish, count_pred_legit
+    m = ""
     m+= "# HELP num_requests The number of requests that have been served, by page.\n"
     m+= "# TYPE num_requests counter\n"
-    m+= "num_requests{{page=\"index\"}} {}\n".format(countIdx)
-    m+= "num_requests{{page=\"predict\"}} {}\n\n".format(countPred)
-    # m+= "num_requests{{page=\"url_was_phising\"}} {}\n\n".format(countPredPhishing)
-    # m+= "num_requests{{page=\"url_was_legit\"}} {}\n\n".format(countPredLegit)
+    m+= "num_requests{{page=\"index\"}} {}\n".format(count_idx)
+    m+= "num_requests{{page=\"predict\"}} {}\n\n".format(count_pred)
+    # m+= "num_requests{{page=\"url_was_phising\"}} {}\n\n".format(count_pred_phish)
+    # m+= "num_requests{{page=\"url_was_legit\"}} {}\n\n".format(count_pred_legit)
 
     m+= "# HELP index_relevance The percentage of requests that are served by index.\n"
     m+= "# TYPE index_relevance gauge\n"
-    m += "index_relevance {}\n".format(min(1.0, float(countIdx)) if countPred == 0 else countIdx/countPred)
+    m+= "index_relevance {}\n".format(min(1.0, float(count_idx))
+                                        if count_idx == 0 else count_idx/count_pred)
 
     return Response(m, mimetype="text/plain")
 
