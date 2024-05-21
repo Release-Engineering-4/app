@@ -82,21 +82,27 @@ def url_was_legit():
     count_pred_legit += 1
     return
 
+
 @app.route('/metrics')
 def show_site_metrics():
     global count_idx, count_pred, count_pred_phish, count_pred_legit
     m = ""
-    m+= "# HELP num_requests The number of requests that have been served, by page.\n"
-    m+= "# TYPE num_requests counter\n"
-    m+= "num_requests{{page=\"index\"}} {}\n".format(count_idx)
-    m+= "num_requests{{page=\"predict\"}} {}\n\n".format(count_pred)
-    # m+= "num_requests{{page=\"url_was_phising\"}} {}\n\n".format(count_pred_phish)
-    # m+= "num_requests{{page=\"url_was_legit\"}} {}\n\n".format(count_pred_legit)
+    m += "# HELP num_requests The number of requests that \
+            have been served, by page.\n"
+    m += "# TYPE num_requests counter\n"
+    m += "num_requests{{page=\"index\"}} {}\n".format(count_idx)
+    m += "num_requests{{page=\"predict\"}} {}\n\n"\
+            .format(count_pred)
+    # m += "num_requests{{page=\"url_was_phising\"}} {}\n\n"\
+    #         .format(count_pred_phish)
+    # m += "num_requests{{page=\"url_was_legit\"}} {}\n\n"\
+    #         .format(count_pred_legit)
 
-    m+= "# HELP index_relevance The percentage of requests that are served by index.\n"
-    m+= "# TYPE index_relevance gauge\n"
-    m+= "index_relevance {}\n".format(min(1.0, float(count_idx))
-                                        if count_idx == 0 else count_idx/count_pred)
+    m += "# HELP index_relevance The percentage of requests \
+         that are served by index.\n"
+    m += "# TYPE index_relevance gauge\n"
+    m += "index_relevance {}\n".format(min(1.0, float(count_idx))
+                            if count_idx == 0 else count_idx/count_pred)
 
     return Response(m, mimetype="text/plain")
 
