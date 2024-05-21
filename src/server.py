@@ -95,7 +95,8 @@ def show_site_metrics():
     metric_str += "# HELP index_relevance The percentage of requests \
          that are served by index.\n"
     metric_str += "# TYPE index_relevance gauge\n"
-    idx_rel = min(1.0, float(COUNT_IDX) if COUNT_IDX == 0 else COUNT_IDX/COUNT_PRED)
+    idx_rel = min(1.0, float(COUNT_IDX) if COUNT_IDX == 0
+                  else COUNT_IDX/COUNT_PRED)
     metric_str += f"index_relevance {idx_rel}"
 
     return Response(metric_str, mimetype="text/plain")
