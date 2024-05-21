@@ -48,6 +48,17 @@ jobs:
       - name: Start minikube
         id: minikube
         uses: medyagh/setup-minikube@master
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
+      
+      - name: Helm add Prometheus
+        run: |
+          helm repo add prom-repo https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install myprom prom-repo/kube-prometheus-stack
   
       - name: Build and Push Docker Image
         run: |
