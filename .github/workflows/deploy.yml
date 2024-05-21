@@ -32,6 +32,10 @@ jobs:
         working-directory: src
         run: poetry run flake8 .
 
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@master
+      
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
