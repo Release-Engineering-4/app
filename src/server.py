@@ -102,9 +102,10 @@ def show_site_metrics():
          that are served by index.\n"
     m += "# TYPE index_relevance gauge\n"
     m += "index_relevance {}\n".format(min(1.0, float(count_idx))
-                            if count_idx == 0 else count_idx/count_pred)
+                                        if count_idx == 0 else count_idx/count_pred)
 
     return Response(m, mimetype="text/plain")
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080, debug=True)
