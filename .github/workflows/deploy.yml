@@ -54,6 +54,11 @@ jobs:
       - name: Deploy to minikube
         run:
           kubectl apply -f kubernetes.yml
+      
+      - name: Sleep for 180 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '180s'
           
       - name: Test service URLs
         run: |
