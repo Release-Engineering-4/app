@@ -31,3 +31,27 @@ jobs:
       - name: Lint with flake8
         working-directory: src
         run: poetry run flake8 .
+
+      - name: Registry Login (ghcr.io)
+        run: |
+          echo "${{secrets.GH_TOKEN}}" | docker login ghcr.io -u ${{github.actor}} --password-stdin
+      
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: Update Kubernetes Manifests
+        run: |
+          sed -i "s|ghcr.io/release-engineering-4/app:latest|ghcr.io/${{steps.lower-repo.outputs.repository}}:${{env.version}}|g" kubernetes.yml
+    
+      - name: Deploy to minikube
+        run:
+          kubectl apply -f kubernetes.yml
+          
+      - name: Test service URLs
+        run: |
+          kubectl get all
+          minikube service list
+          minikube service app --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service app --url) 
