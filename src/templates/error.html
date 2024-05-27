@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>remla24-team04 Phishing Link Detector</title>
+    <link href="{{url_for('static', filename='styles.css')}}
+    " rel="stylesheet" />
+</head>
+<body>
+    <h1>Phishing Link detector</h1>
+    <div>
+        Link phishing, also known as phishing through malicious links, 
+        involves cyberattacks where attackers send deceptive emails or messages 
+        containing links to fraudulent websites. These sites mimic legitimate platforms to 
+        trick users into revealing sensitive information like usernames, passwords, 
+        or credit card numbers.
+    </div>
+    <div>
+        This tool is designed by Team 04 of the course Release Engineering for Machine Learning Applications 2024
+        to help you detect phishing links. Simply enter the link you want to check in the input field below and 
+        click the "Check" button.
+    </div>
+    <form action="/predict">
+        <input type="text" id="url" name="url" placeholder="Enter url here">
+        <button type="submit">Check</button>
+    </form>
+
+    <p id="inputDisplay">Input: {{ inputDisplay }}</p>
+    <p id="result">Service Error</p>
+
+    
+    <p><strong>Version:</strong> {{ version }}</p>
+</body>
+</html>
