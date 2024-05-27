@@ -1,9 +1,9 @@
 """Module providing templates for the various routes of the web app."""
 
 import os
+import time
 import psutil
 import requests
-import time
 from flask import Flask, render_template, request, Response
 from libversion import version_util
 from prometheus_client import (Counter,
@@ -27,10 +27,12 @@ cpu_usage = Gauge('cpu_usage',
                   'CPU usage of app')
 memory_usage = Gauge('memory_usage',
                      'Memory usage of app')
-request_duration_histogram = Histogram('flask_app_request_duration_seconds', 
-                                       'Histogram for request duration in seconds')
-request_duration_summary = Summary('flask_app_request_duration_seconds_summary', 
-                                   'Summary for request duration in seconds')
+request_duration_histogram = Histogram(
+    'flask_app_request_duration_seconds',
+    'Histogram for request duration in seconds')
+request_duration_summary = Summary(
+    'flask_app_request_duration_seconds_summary',
+    'Summary for request duration in seconds')
 
 
 # get environment variables from docker ran command
@@ -49,7 +51,6 @@ def index():
     Returns: The default web template.
     '''
     index_requests.inc()
-    
     return render_template(
         "index.html",
         inputDisplay="",
@@ -82,7 +83,7 @@ def predict():
             result=response_request['result'],
             version=ver
         )
-    except Exception:
+    except requests.exceptions.RequestException:
         errored_requests.inc()
         duration = time.time() - start_time
         request_duration_histogram.observe(duration)
@@ -92,7 +93,6 @@ def predict():
             inputDisplay=url,
             version=ver
         )
-        
 
 
 # @app.route('/url_was_phising')
@@ -134,9 +134,8 @@ def show_site_metrics():
     # metric_str += f"index_relevance {idx_rel}"
 
     # return Response(metric_str, mimetype="text/plain")
-    
     cpu_usage.set(psutil.cpu_percent())
-    memory_usage.set(psutil.virtual_memory().used) 
+    memory_usage.set(psutil.virtual_memory().used)
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
