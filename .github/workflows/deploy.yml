@@ -84,7 +84,7 @@ jobs:
           
       - name: Test service URLs
         run: |
-          kubectl get pods
+          kubectl get all
           minikube service list
           minikube service app --url
           echo "------------------opening the service------------------"
