@@ -4,13 +4,12 @@ import os
 import time
 # import psutil
 import requests
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request
 from libversion import version_util
 from prometheus_client import (Counter,
                                Histogram,
                                Summary,
-                               start_http_server,
-                               CONTENT_TYPE_LATEST)
+                               start_http_server)
 
 # load class
 lv = version_util.VersionUtil()
