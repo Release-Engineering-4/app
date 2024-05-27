@@ -36,21 +36,6 @@ jobs:
         run: |
           echo "${{secrets.GH_TOKEN}}" | docker login ghcr.io -u ${{github.actor}} --password-stdin
       
-      - name: Start minikube
-        id: minikube
-        uses: medyagh/setup-minikube@master
-
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.10.0
-      
-      - name: Helm add Prometheus
-        run: |
-          helm repo add prom-repo https://prometheus-community.github.io/helm-charts
-          helm repo update
-          helm install myprom prom-repo/kube-prometheus-stack
-
       - name: Parse version info from tag
         run: |
           VERSION=${GITHUB_REF:11}
@@ -72,6 +57,21 @@ jobs:
             --tag $IMG:latest \
             .
           docker push --all-tags $IMG
+      
+      - name: Start minikube
+        id: minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
+      
+      - name: Helm add Prometheus
+        run: |
+          helm repo add prom-repo https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install myprom prom-repo/kube-prometheus-stack
     
       - name: Deploy to minikube
         run:
