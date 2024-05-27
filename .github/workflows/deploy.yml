@@ -82,10 +82,10 @@ jobs:
         run:
           kubectl apply -f kubernetes.yml
       
-      - name: Sleep for 300 seconds
+      - name: Sleep for 180 seconds
         uses: jakejarvis/wait-action@master
         with:
-          time: '300s'
+          time: '180s'
           
       - name: Test service URLs
         run: |
