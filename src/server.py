@@ -4,12 +4,12 @@ import os
 import time
 # import psutil
 import requests
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 from libversion import version_util
 from prometheus_client import (Counter,
                                Histogram,
                                Summary,
-                               start_http_server)
+                               Gauge)
 
 # load class
 lv = version_util.VersionUtil()
@@ -21,8 +21,8 @@ index_requests = Counter('flask_app_index_requests_total',
                          'Total number of requests to the index page')
 errored_requests = Counter('error_requests_total',
                            'Total number of requests that errored out')
-# cpu_usage = Gauge('cpu_usage',
-#                   'CPU usage of app')
+cpu_usage = Gauge('cpu_usage',
+                  'CPU usage of app')
 # memory_usage = Gauge('memory_usage',
 #                      'Memory usage of app')
 request_duration_histogram = Histogram(
@@ -111,32 +111,30 @@ def predict():
 #     return
 
 
-# @app.route('/metrics')
-# def show_site_metrics():
-#     '''
-#     Define the /metric route.
-#     Returns: The metrics web template.
-#     '''
-#     # metric_str = ""
-#     # metric_str += "# HELP num_requests The number of requests that \
-#     #         have been served, by page.\n"
-#     # metric_str += "# TYPE num_requests counter\n"
-#     # metric_str += f"num_requests{{page=\"index\"}} {COUNT_IDX}\n"
-#     # metric_str += f"num_requests{{page=\"predict\"}} {COUNT_PRED}\n\n"
+@app.route('/metrics')
+def show_site_metrics():
+    '''
+    Define the /metric route.
+    Returns: The metrics web template.
+    '''
+    metric_str = ""
+    metric_str += "# HELP num_requests The number of requests that \
+            have been served, by page.\n"
+    metric_str += "# TYPE num_requests counter\n"
+    metric_str += f"num_requests{{page=\"index\"}} {index_requests}\n"
+    metric_str += f"num_requests{{page=\"predict\"}} {num_pred_requests}\n\n"
 
-#     # metric_str += "# HELP index_relevance The percentage of requests \
-#     #      that are served by index.\n"
-#     # metric_str += "# TYPE index_relevance gauge\n"
-#     # idx_rel = min(1.0, float(COUNT_IDX) if COUNT_PRED == 0
-#     #               else COUNT_IDX/COUNT_PRED)
-#     # metric_str += f"index_relevance {idx_rel}"
+    metric_str += "# HELP index_relevance The percentage of requests \
+         that are served by index.\n"
+    metric_str += "# TYPE index_relevance gauge\n"
+    idx_rel = min(1.0, float(index_requests) if num_pred_requests == 0
+                  else index_requests/num_pred_requests)
+    metric_str += f"index_relevance {idx_rel}\n"
 
-#     # return Response(metric_str, mimetype="text/plain")
-#     # cpu_usage.set(psutil.cpu_percent())
-#     # memory_usage.set(psutil.virtual_memory().used)
-#     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
-
-start_http_server(9090)
+    return Response(metric_str, mimetype="text/plain")
+    # cpu_usage.set(psutil.cpu_percent())
+    # memory_usage.set(psutil.virtual_memory().used)
+    # return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 if __name__ == '__main__':

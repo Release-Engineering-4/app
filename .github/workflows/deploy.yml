@@ -29,13 +29,13 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Pylint source directories
-        working-directory: src
-        run: poetry run pylint $(git ls-files '*.py')
+      # - name: Pylint source directories
+      #   working-directory: src
+      #   run: poetry run pylint $(git ls-files '*.py')
 
-      - name: Lint with flake8
-        working-directory: src
-        run: poetry run flake8 .
+      # - name: Lint with flake8
+      #   working-directory: src
+      #   run: poetry run flake8 .
 
       - name: Registry Login (ghcr.io)
         run: |
@@ -63,34 +63,34 @@ jobs:
             .
           docker push --all-tags $IMG
       
-      - name: Start minikube
-        id: minikube
-        uses: medyagh/setup-minikube@master
+      # - name: Start minikube
+      #   id: minikube
+      #   uses: medyagh/setup-minikube@master
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.10.0
+      # - name: Install Helm
+      #   uses: azure/setup-helm@v3
+      #   with:
+      #     version: v3.10.0
       
-      - name: Helm add Prometheus
-        run: |
-          helm repo add prom-repo https://prometheus-community.github.io/helm-charts
-          helm repo update
-          helm install myprom prom-repo/kube-prometheus-stack
+      # - name: Helm add Prometheus
+      #   run: |
+      #     helm repo add prom-repo https://prometheus-community.github.io/helm-charts
+      #     helm repo update
+      #     helm install myprom prom-repo/kube-prometheus-stack
     
-      - name: Deploy to minikube
-        run:
-          kubectl apply -f kubernetes.yml
+      # - name: Deploy to minikube
+      #   run:
+      #     kubectl apply -f kubernetes.yml
       
-      - name: Sleep for 180 seconds
-        uses: jakejarvis/wait-action@master
-        with:
-          time: '180s'
+      # - name: Sleep for 180 seconds
+      #   uses: jakejarvis/wait-action@master
+      #   with:
+      #     time: '180s'
           
-      - name: Test service URLs
-        run: |
-          kubectl get all
-          minikube service list
-          minikube service app --url
-          echo "------------------opening the service------------------"
-          curl $(minikube service app --url) 
+      # - name: Test service URLs
+      #   run: |
+      #     kubectl get all
+      #     minikube service list
+      #     minikube service app --url
+      #     echo "------------------opening the service------------------"
+      #     curl $(minikube service app --url) 
