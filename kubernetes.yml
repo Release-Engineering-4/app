@@ -24,6 +24,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app
+  labels:
+    app: app-serv
 spec:
   type: 
     NodePort
@@ -53,6 +55,6 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: app
+      app: app-serv
   endpoints:
-    - port: "9090" 
+    - interval: 30s
