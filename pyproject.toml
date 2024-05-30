@@ -14,6 +14,8 @@ flasgger = "0.9.4"
 lib-version = {git = "https://github.com/Release-Engineering-4/lib-version", rev = "main"}
 pylint = "^3.2.2"
 flake8 = "^7.0.0"
+psutil = "5.9.8"
+prometheus-client = "0.20.0"
 
 
 [build-system]

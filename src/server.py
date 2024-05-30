@@ -1,19 +1,42 @@
 """Module providing templates for the various routes of the web app."""
 
 import os
+import time
+import psutil
 import requests
 from flask import Flask, render_template, request, Response
 from libversion import version_util
+from prometheus_client import (Counter,
+                               Histogram,
+                               Summary,
+                               Gauge,
+                               generate_latest,
+                               CONTENT_TYPE_LATEST)
 
 # load class
 lv = version_util.VersionUtil()
 ver = lv.get_version()
 
-# pylint: disable-next=global-statement
-COUNT_IDX, COUNT_PRED = 0, 0
+num_pred_requests = Counter('prediction_requests_total',
+                            'Total number of prediction requests')
+index_requests = Counter('flask_app_index_requests_total',
+                         'Total number of requests to the index page')
+errored_requests = Counter('error_requests_total',
+                           'Total number of requests that errored out')
+cpu_usage = Gauge('cpu_usage',
+                  'CPU usage of app')
+memory_usage = Gauge('memory_usage',
+                     'Memory usage of app')
+request_duration_histogram = Histogram(
+    'flask_app_request_duration_seconds',
+    'Histogram for request duration in seconds')
+request_duration_summary = Summary(
+    'flask_app_request_duration_seconds_summary',
+    'Summary for request duration in seconds')
+
 
 # get environment variables from docker ran command
-model_url = os.getenv('MODEL_URL', 'http://localhost:5000/process_link')
+model_url = os.getenv('MODEL_URL', 'http://localhost:5000/predict')
 
 print(f"Using model_url: {model_url}")
 # load frontend
@@ -27,9 +50,7 @@ def index():
     Load template page and send it to the user.
     Returns: The default web template.
     '''
-    # pylint: disable-next=global-statement
-    global COUNT_IDX
-    COUNT_IDX += 1
+    index_requests.inc()
     return render_template(
         "index.html",
         inputDisplay="",
@@ -44,21 +65,34 @@ def predict():
     Define the /predict route.
     Returns: The results web template.
     '''
-    # pylint: disable-next=global-statement
-    global COUNT_PRED
-    COUNT_PRED += 1
+    num_pred_requests.inc()
     # Get the link from the html page and send it to the service
     url = request.args.get("url")
     data = {"url": url}
-    response = requests.post(model_url, json=data, timeout=10)
-    # Extract result form response
-    response_request = response.json()
-    return render_template(
-        "results.html",
-        inputDisplay=url,
-        result=response_request['result'],
-        version=ver
-    )
+    start_time = time.time()
+    try:
+        response = requests.post(model_url, json=data, timeout=10)
+        # Extract result form response
+        response_request = response.json()
+        duration = time.time() - start_time
+        request_duration_histogram.observe(duration)
+        request_duration_summary.observe(duration)
+        return render_template(
+            "results.html",
+            inputDisplay=url,
+            result=response_request['result'],
+            version=ver
+        )
+    except requests.exceptions.RequestException:
+        errored_requests.inc()
+        duration = time.time() - start_time
+        request_duration_histogram.observe(duration)
+        request_duration_summary.observe(duration)
+        return render_template(
+            "error.html",
+            inputDisplay=url,
+            version=ver
+        )
 
 
 # @app.route('/url_was_phising')
@@ -80,34 +114,15 @@ def predict():
 
 
 @app.route('/metrics')
-def show_site_metrics():
+def metrics():
     '''
     Define the /metric route.
     Returns: The metrics web template.
     '''
-    metric_str = ""
-    metric_str += "# HELP num_requests The number of requests that \
-            have been served, by page.\n"
-    metric_str += "# TYPE num_requests counter\n"
-    metric_str += f"num_requests{{page=\"index\"}} {COUNT_IDX}\n"
-    metric_str += f"num_requests{{page=\"predict\"}} {COUNT_PRED}\n\n"
-
-    metric_str += "# HELP index_relevance The percentage of requests \
-         that are served by index.\n"
-    metric_str += "# TYPE index_relevance gauge\n"
-    idx_rel = min(1.0, float(COUNT_IDX) if COUNT_IDX == 0
-                  else COUNT_IDX/COUNT_PRED)
-    metric_str += f"index_relevance {idx_rel}"
-
-    return Response(metric_str, mimetype="text/plain")
+    cpu_usage.set(psutil.cpu_percent())
+    memory_usage.set(psutil.virtual_memory().used)
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080, debug=True)
-
-
-def run_frontend():
-    '''
-    Exposes the app on port 8080.
-    '''
     app.run(host="0.0.0.0", port=8080, debug=True)
