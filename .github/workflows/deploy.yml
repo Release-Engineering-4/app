@@ -31,3 +31,7 @@ jobs:
       - name: Lint with flake8
         working-directory: src
         run: poetry run flake8 .
+      
+      - name: Test source directories
+        working-directory: src
+        run: poetry run pytest
