@@ -6,6 +6,8 @@ Unit testing server.py
 import os
 import sys
 import pytest
+import subprocess
+import time
 import requests
 from unittest.mock import patch, Mock
 from libversion import version_util
@@ -119,3 +121,18 @@ def test_metrics_route():
             assert b'memory_usage' in response.data
             assert cpu_usage._value.get() == 50
             assert memory_usage._value.get() == 2048
+
+def test_server_startup():
+    '''
+    Test that the server starts and responds OK to a request to /index
+    '''
+    process = subprocess.Popen(['python', 'src/server.py'])
+    time.sleep(2) 
+
+    try:
+        response = requests.get('http://localhost:8080/index')
+        assert response.status_code == 200
+    finally:
+        # Terminate the server
+        process.terminate()
+        process.wait()
