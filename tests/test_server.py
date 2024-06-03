@@ -38,6 +38,9 @@ def client():
     """
     with app.test_client() as client:
         yield client
+    correct_predictions._value.set(0)
+    incorrect_predictions._value.set(0)
+    model_accuracy.set(0)
 
 
 def test_index_route(client):
@@ -149,7 +152,7 @@ def test_feedback_route_incorrect():
 
     assert incorrect_predictions._value.get() == 1
     assert model_accuracy._value.get() == 0.0
-    assert response.data == "Thank you for your feedback!"
+    assert response.data.decode() == "Thank you for your feedback!"
 
 
 def test_server_startup():
