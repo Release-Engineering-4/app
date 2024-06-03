@@ -23,10 +23,18 @@ index_requests = Counter('flask_app_index_requests_total',
                          'Total number of requests to the index page')
 errored_requests = Counter('error_requests_total',
                            'Total number of requests that errored out')
+correct_predictions = Counter('correct_predictions',
+                              'Total number of requests giving \
+                                correct prediction')
+incorrect_predictions = Counter('incorrect_predictions',
+                                'Total number of requests giving \
+                                    incorrect prediction')
 cpu_usage = Gauge('cpu_usage',
                   'CPU usage of app')
 memory_usage = Gauge('memory_usage',
                      'Memory usage of app')
+model_accuracy = Gauge('model_accuracy',
+                       'Measure of prediction accuracy based on feedback')
 request_duration_histogram = Histogram(
     'flask_app_request_duration_seconds',
     'Histogram for request duration in seconds')
@@ -95,22 +103,23 @@ def predict():
         )
 
 
-# @app.route('/url_was_phising')
-# def url_was_phising():
-#     '''
-#     Define the /url_was_phising route.
-#     Returns: The phising web template.
-#     '''
-#     return
-
-
-# @app.route('/url_was_legit')
-# def url_was_legit():
-#     '''
-#     Define the /url_was_legit route.
-#     Returns: The legit web template.
-#     '''
-#     return
+@app.route('/feedback')
+def feedback():
+    '''
+    Define the /feedback route.
+    Returns: The legit web template.
+    '''
+    user_feedback = request.args.get("prediction_feedback") == "correct"
+    if user_feedback:
+        correct_predictions.inc()
+    else:
+        incorrect_predictions.inc()
+    # pylint: disable = protected-access
+    accuracy = correct_predictions._value.get() / \
+        (correct_predictions._value.get()
+         + incorrect_predictions._value.get())
+    model_accuracy.set(accuracy)
+    return "Thank you for your feedback!"
 
 
 @app.route('/metrics')

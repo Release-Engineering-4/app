@@ -21,7 +21,10 @@ from server import (app,
                     errored_requests,
                     cpu_usage,
                     memory_usage,
-                    model_url)
+                    model_url,
+                    correct_predictions,
+                    incorrect_predictions,
+                    model_accuracy)
 
 
 lv = version_util.VersionUtil()
@@ -121,6 +124,33 @@ def test_metrics_route():
             assert b'memory_usage' in response.data
             assert cpu_usage._value.get() == 50
             assert memory_usage._value.get() == 2048
+
+
+def test_feedback_route_correct():
+    """
+    Testing feedback route
+    """
+    
+    data = {"prediction_feedback": "correct"}
+    response = client.get('/feedback', query_string=data)
+
+    assert correct_predictions._value.get() == 1
+    assert model_accuracy.get() == 1.0
+    assert response.data == "Thank you for your feedback!"
+
+
+def test_feedback_route_incorrect():
+    """
+    Testing feedback route
+    """
+    
+    data = {"prediction_feedback": "incorrect"}
+    response = client.get('/feedback', query_string=data)
+
+    assert incorrect_predictions._value.get() == 1
+    assert model_accuracy.get() == 0.0
+    assert response.data == "Thank you for your feedback!"
+
 
 def test_server_startup():
     '''
