@@ -135,7 +135,7 @@ def test_feedback_route_correct():
     response = app.test_client().get('/feedback', query_string=data)
 
     assert correct_predictions._value.get() == 1
-    assert model_accuracy.get() == 1.0
+    assert model_accuracy._value.get() == 1.0
     assert response.data == "Thank you for your feedback!"
 
 
@@ -148,7 +148,7 @@ def test_feedback_route_incorrect():
     response = app.test_client().get('/feedback', query_string=data)
 
     assert incorrect_predictions._value.get() == 1
-    assert model_accuracy.get() == 0.0
+    assert model_accuracy._value.get() == 0.0
     assert response.data == "Thank you for your feedback!"
 
 
