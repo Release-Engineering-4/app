@@ -40,6 +40,16 @@ def client():
         yield client
 
 
+@pytest.fixture(autouse=True)
+def reset_prometheus_counters():
+    num_pred_requests._value.set(0)
+    index_requests._value.set(0)
+    errored_requests._value.set(0)
+    correct_predictions._value.set(0)
+    incorrect_predictions._value.set(0)
+    yield
+
+
 def test_index_route(client):
     """
     Testing index route
@@ -64,7 +74,7 @@ def test_predict_route_success(mock_post, client):
     Testing predict route with success
     """
     mock_response = Mock()
-    mock_response.json.return_value = {'result': 'phishing'}
+    mock_response.json.return_value = {"prediction": [[0.6]]}
     mock_post.return_value = mock_response
 
     with patch('server.render_template') as mock_render:
@@ -77,8 +87,35 @@ def test_predict_route_success(mock_post, client):
         mock_render.assert_called_once_with(
             "results.html",
             inputDisplay=url,
-            result='phishing',
-            version=ver
+            result="The provided input is a phishing URL!",
+            version=ver,
+        )
+        assert response.status_code == 200
+        assert response.data == b"results.html content"
+        assert num_pred_requests._value.get() == 1
+
+
+@patch("requests.post")
+def test_predict_route_phishing(mock_post, client):
+    """
+    Testing predict route with phishing
+    """
+    mock_response = Mock()
+    mock_response.json.return_value = {"prediction": [[0.2]]}
+    mock_post.return_value = mock_response
+
+    with patch("server.render_template") as mock_render:
+        mock_render.return_value = "results.html content"
+        url = "http://example.com"
+        data = {"url": url}
+        response = client.get("/predict", query_string=data)
+
+        mock_post.assert_called_once_with(model_url, json=data, timeout=10)
+        mock_render.assert_called_once_with(
+            "results.html",
+            inputDisplay=url,
+            result="The provided input is not a phishing URL!",
+            version=ver,
         )
         assert response.status_code == 200
         assert response.data == b"results.html content"
