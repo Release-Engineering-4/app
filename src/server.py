@@ -74,22 +74,23 @@ def predict():
     Returns: The results web template.
     '''
     num_pred_requests.inc()
-    # Get the link from the html page and send it to the service
     url = request.args.get("url")
     data = {"url": url}
     start_time = time.time()
     try:
         response = requests.post(model_url, json=data, timeout=10)
-        # Extract result form response
         response_request = response.json()
         duration = time.time() - start_time
         request_duration_histogram.observe(duration)
         request_duration_summary.observe(duration)
+        url_result = ""
+        if response_request["prediction"]:
+            if response_request["prediction"][0][0] > 0.5:
+                url_result = "The provided input is a phishing URL!"
+            else:
+                url_result = "The provided input is not a phishing URL!"
         return render_template(
-            "results.html",
-            inputDisplay=url,
-            result=response_request['result'],
-            version=ver
+            "results.html", inputDisplay=url, result=url_result, version=ver
         )
     except requests.exceptions.RequestException:
         errored_requests.inc()
