@@ -75,7 +75,12 @@ Because we use Minikube, there are limitations with virtualization through the D
 minikube tunnel
 ```
 
-Run this command in a seperate terminal and keep it open to be able to access the application through the following URL: `http://localhost/`.
+Run this command in a separate terminal and keep it open to be able to access the application through the following URL: `http://localhost/`.
 
+## Monitoring
 
+Metrics of type Gauge, Counter, Histogram and Summary are defined. They monitor the app usage in number of visits, number of errored requests, cpu and memory usage. These metrics are available on the ```/metrics``` endpoint and are also visible on Prometheus.
 
+Alerting based on number of errored requests is to be set up. If the number exceeds a certain threshold, it implies that there is an issue with the ```app``` service and needs immediate fixing, thus an email alert will be configured. Alert can be tested by disabling the ```model-service```.
+
+The app asks the user to input whether the prediction given by our service was correct or incorrect. Metrics for prediction accuracy are also created to keep track of this. Based on this accuracy metric, we can find out the real-time effectiveness of the model. The Istio Service mesh for traffic management will divert portion of the traffic to the app which uses another fine-tuned version of the model. The accuracy for both models can thus be compared to see which performs better for user requests.
