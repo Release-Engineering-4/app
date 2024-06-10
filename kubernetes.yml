@@ -27,8 +27,8 @@ metadata:
   labels:
     app: app-serv
 spec:
-  type: 
-    NodePort
+  # type: 
+  #   NodePort
   selector:
     app: app
   ports:
