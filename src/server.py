@@ -17,6 +17,13 @@ from prometheus_client import (Counter,
 lv = version_util.VersionUtil()
 ver = lv.get_version()
 
+# get environment variables from docker ran command
+model_url = os.getenv('MODEL_URL', 'http://localhost:5000/predict')
+model_url_beta = os.getenv('MODEL_URL_BETA', 'http://localhost:5000/predict')
+beta_test = os.getenv('BETA_TEST_FLAG', False)
+
+print(f"Using model_url: {model_url}")
+
 num_pred_requests = Counter('prediction_requests_total',
                             'Total number of prediction requests')
 index_requests = Counter('flask_app_index_requests_total',
@@ -42,11 +49,16 @@ request_duration_summary = Summary(
     'flask_app_request_duration_seconds_summary',
     'Summary for request duration in seconds')
 
+if beta_test:
+    beta_correct_predictions = Counter('beta_correct_predictions',
+                              'Total number of requests giving \
+                                correct prediction to beta')
+    beta_incorrect_predictions = Counter('beta_incorrect_predictions',
+                                    'Total number of requests giving \
+                                        incorrect prediction to beta')
+    beta_model_accuracy = Gauge('beta_model_accuracy',
+                        'Measure of prediction accuracy of beta model based on feedback')
 
-# get environment variables from docker ran command
-model_url = os.getenv('MODEL_URL', 'http://localhost:5000/predict')
-
-print(f"Using model_url: {model_url}")
 # load frontend
 app = Flask(__name__)
 
@@ -112,6 +124,9 @@ def feedback():
     Returns: The legit web template.
     '''
     user_feedback = request.args.get("prediction_feedback") == "correct"
+    result = request.args.get("result") == "The provided input is a phishing URL!"
+    was_phishing = (user_feedback and result) or (not user_feedback and not result)
+
     if user_feedback:
         correct_predictions.inc()
     else:
@@ -121,6 +136,25 @@ def feedback():
         (correct_predictions._value.get()
          + incorrect_predictions._value.get())
     model_accuracy.set(accuracy)
+
+    if beta_test:
+        # Need to run for beta model-service
+        url = request.args.get("url")
+        data = {"url": url}
+        response = requests.post(model_url_beta, json=data, timeout=10)
+        response_request = response.json()
+        if response_request["prediction"]:
+            if (response_request["prediction"][0][0] > 0.5 and was_phishing) \
+            or (response_request["prediction"][0][0] <= 0.5 and not was_phishing):
+                #correct prediction
+                beta_correct_predictions.inc()
+            else:
+                beta_incorrect_predictions.inc()
+            accuracy = correct_predictions._value.get() / \
+                (correct_predictions._value.get()
+                 + incorrect_predictions._value.get())
+            beta_model_accuracy.set(accuracy)
+                
     return render_template(
         "index.html",
         inputDisplay="",
