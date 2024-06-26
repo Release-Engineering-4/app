@@ -61,6 +61,7 @@ def test_index_route(client):
             "index.html",
             inputDisplay="",
             result="",
+            feedback="",
             version=ver
         )
         assert response.status_code == 200
@@ -171,12 +172,34 @@ def test_feedback_route_correct():
     incorrect_predictions._value.set(0)
     model_accuracy.set(0)
     data = {"prediction_feedback": "correct"}
-    response = app.test_client().get('/feedback', query_string=data)
 
-    assert correct_predictions._value.get() == 1
-    assert model_accuracy._value.get() == 1.0
-    assert response.data.decode() == "Thank you for your feedback!"
+    with patch("server.render_template") as mock_render:
+        response = app.test_client().get('/feedback', query_string=data)
+        mock_render.return_value = "index.html content"
+        mock_render.assert_called_once_with(
+            "index.html",
+            inputDisplay="",
+            result="",
+            feedback="Thank you for your feedback!",
+            version=ver,
+        )
+        assert correct_predictions._value.get() == 1
+        assert model_accuracy._value.get() == 1.0
 
+
+# def test_feedback_route_incorrect():
+#     """
+#     Testing feedback route
+#     """
+#     correct_predictions._value.set(0)
+#     incorrect_predictions._value.set(0)
+#     model_accuracy.set(0)
+#     data = {"prediction_feedback": "incorrect"}
+#     response = app.test_client().get('/feedback', query_string=data)
+
+#     assert incorrect_predictions._value.get() == 1
+#     assert model_accuracy._value.get() == 0.0
+#     assert response.data.decode() == "Thank you for your feedback!"
 
 def test_feedback_route_incorrect():
     """
@@ -186,11 +209,19 @@ def test_feedback_route_incorrect():
     incorrect_predictions._value.set(0)
     model_accuracy.set(0)
     data = {"prediction_feedback": "incorrect"}
-    response = app.test_client().get('/feedback', query_string=data)
 
-    assert incorrect_predictions._value.get() == 1
-    assert model_accuracy._value.get() == 0.0
-    assert response.data.decode() == "Thank you for your feedback!"
+    with patch("server.render_template") as mock_render:
+        response = app.test_client().get('/feedback', query_string=data)
+        mock_render.return_value = "index.html content"
+        mock_render.assert_called_once_with(
+            "index.html",
+            inputDisplay="",
+            result="",
+            feedback="Thank you for your feedback!",
+            version=ver,
+        )
+        assert incorrect_predictions._value.get() == 1
+        assert model_accuracy._value.get() == 0.0
 
 
 def test_server_startup():
