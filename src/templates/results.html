@@ -38,11 +38,13 @@
             <label for="correct">Prediction was correct</label><br>
             <input type="radio" id="incorrect" name="prediction_feedback" value="incorrect">
             <label for="incorrect">Prediction was incorrect</label><br><br>
+            <input type="hidden" id="url" name="url" value="{{ inputDisplay }}">
+            <input type="hidden" id="predictionResult" name="result" value="{{ result }}">
             <button type="submit">Submit Feedback</button>
         </form>
     </div>
-
     
     <p><strong>Version:</strong> {{ version }}</p>
+
 </body>
 </html>

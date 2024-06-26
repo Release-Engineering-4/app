@@ -1,5 +1,6 @@
 """Module providing templates for the various routes of the web app."""
 
+# pylint: disable = protected-access, import-error
 import os
 import time
 import psutil
@@ -8,13 +9,25 @@ from flask import Flask, render_template, request, Response
 from libversion import version_util
 from prometheus_client import (generate_latest,
                                CONTENT_TYPE_LATEST)
-from metrics_init import *
+from metrics_init import (num_pred_requests,
+                          index_requests,
+                          errored_requests,
+                          correct_predictions,
+                          incorrect_predictions,
+                          cpu_usage,
+                          memory_usage,
+                          model_accuracy,
+                          request_duration_histogram,
+                          request_duration_summary,
+                          beta_correct_predictions,
+                          beta_incorrect_predictions,
+                          beta_model_accuracy)
 
 # load class
 lv = version_util.VersionUtil()
 ver = lv.get_version()
 
-# get environment variables 
+# get environment variables
 model_url = os.getenv('MODEL_URL', 'http://localhost:5000/predict')
 model_url_beta = os.getenv('MODEL_URL_BETA', 'http://localhost:5000/predict')
 beta_test = os.getenv('BETA_TEST_FLAG', "False") == "True"
@@ -89,15 +102,16 @@ def feedback():
     Returns: The legit web template.
     '''
     user_feedback = request.args.get("prediction_feedback") == "correct"
-    result = request.args.get("result") == "The provided input is a phishing URL!"
-    was_phishing = (user_feedback and result) or (not user_feedback and not result)
+    result = request.args.get("result") == "The provided input \
+        is a phishing URL!"
+    was_phishing = (user_feedback and result) or \
+        (not user_feedback and not result)
     feedback_given = "Thank you for your feedback!"
 
     if user_feedback:
         correct_predictions.inc()
     else:
         incorrect_predictions.inc()
-    # pylint: disable = protected-access
     accuracy = correct_predictions._value.get() / \
         (correct_predictions._value.get()
          + incorrect_predictions._value.get())
@@ -111,8 +125,8 @@ def feedback():
         response_request = response.json()
         if response_request["prediction"]:
             if (response_request["prediction"][0][0] > 0.5 and was_phishing) \
-            or (response_request["prediction"][0][0] <= 0.5 and not was_phishing):
-                #correct prediction
+                    or (response_request["prediction"][0][0] <= 0.5
+                        and not was_phishing):
                 beta_correct_predictions.inc()
             else:
                 beta_incorrect_predictions.inc()
@@ -121,7 +135,6 @@ def feedback():
                  + incorrect_predictions._value.get())
             beta_model_accuracy.set(accuracy)
         feedback_given = f'{feedback_given} This will help improve our model.'
-                
     return render_template(
         "index.html",
         inputDisplay="",

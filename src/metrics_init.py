@@ -1,8 +1,11 @@
+"""Module providing initializing prometheus variables."""
+
 import os
 from prometheus_client import (Counter,
                                Histogram,
                                Summary,
                                Gauge)
+
 beta_test = os.getenv('BETA_TEST_FLAG', "False") == "True"
 
 num_pred_requests = Counter('prediction_requests_total',
@@ -30,12 +33,12 @@ request_duration_summary = Summary(
     'flask_app_request_duration_seconds_summary',
     'Summary for request duration in seconds')
 
-if beta_test:
-    beta_correct_predictions = Counter('beta_correct_predictions',
-                                'Total number of requests giving \
-                                correct prediction to beta')
-    beta_incorrect_predictions = Counter('beta_incorrect_predictions',
-                                    'Total number of requests giving \
+beta_correct_predictions = Counter('beta_correct_predictions',
+                                   'Total number of requests giving \
+                                    correct prediction to beta')
+beta_incorrect_predictions = Counter('beta_incorrect_predictions',
+                                     'Total number of requests giving \
                                         incorrect prediction to beta')
-    beta_model_accuracy = Gauge('beta_model_accuracy',
-                        'Measure of prediction accuracy of beta model based on feedback')
+beta_model_accuracy = Gauge('beta_model_accuracy',
+                            'Measure of prediction accuracy of beta model \
+                                based on feedback')
