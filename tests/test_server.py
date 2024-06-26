@@ -15,16 +15,14 @@ from libversion import version_util
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../src')))
 
-from server import (app,
-                    num_pred_requests,
-                    index_requests,
-                    errored_requests,
-                    cpu_usage,
-                    memory_usage,
+os.environ["BETA_TEST_FLAG"] = "True"
+
+from server import (app, 
                     model_url,
-                    correct_predictions,
-                    incorrect_predictions,
-                    model_accuracy)
+                    model_url_beta,
+                    beta_test)
+
+from metrics_init import *
 
 
 lv = version_util.VersionUtil()
@@ -54,13 +52,16 @@ def test_index_route(client):
     """
     Testing index route
     """
+    result_tx = ""
+    if beta_test:
+        result_tx = "This app will test our beta model too"
     with patch('server.render_template') as mock_render:
         mock_render.return_value = "index.html content"
         response = client.get('/index')
         mock_render.assert_called_once_with(
             "index.html",
             inputDisplay="",
-            result="",
+            result=result_tx,
             feedback="",
             version=ver
         )
@@ -84,7 +85,7 @@ def test_predict_route_success(mock_post, client):
         data = {"url": url}
         response = client.get('/predict', query_string=data)
 
-        mock_post.assert_called_once_with(model_url, json=data, timeout=10)
+        mock_post.assert_called_once_with(model_url, json=data, timeout=30)
         mock_render.assert_called_once_with(
             "results.html",
             inputDisplay=url,
@@ -111,7 +112,7 @@ def test_predict_route_phishing(mock_post, client):
         data = {"url": url}
         response = client.get("/predict", query_string=data)
 
-        mock_post.assert_called_once_with(model_url, json=data, timeout=10)
+        mock_post.assert_called_once_with(model_url, json=data, timeout=30)
         mock_render.assert_called_once_with(
             "results.html",
             inputDisplay=url,
@@ -136,7 +137,7 @@ def test_predict_route_error(mock_post, client):
         data = {"url": url}
         response = client.get('/predict', query_string=data)
 
-        mock_post.assert_called_once_with(model_url, json=data, timeout=10)
+        mock_post.assert_called_once_with(model_url, json=data, timeout=30)
         mock_render.assert_called_once_with(
             "error.html",
             inputDisplay=url,
@@ -163,45 +164,43 @@ def test_metrics_route():
             assert cpu_usage._value.get() == 50
             assert memory_usage._value.get() == 2048
 
-
-def test_feedback_route_correct():
+@patch('requests.post')
+def test_feedback_route_correct(mock_post, client):
     """
     Testing feedback route
     """
     correct_predictions._value.set(0)
     incorrect_predictions._value.set(0)
     model_accuracy.set(0)
-    data = {"prediction_feedback": "correct"}
+    fb_data = {"prediction_feedback": "correct"}
+    mock_response = Mock()
+    mock_response.json.return_value = {"prediction": [[0.6]]}
+    mock_post.return_value = mock_response
+    feedback_given = "Thank you for your feedback!"
 
     with patch("server.render_template") as mock_render:
-        response = app.test_client().get('/feedback', query_string=data)
+        if beta_test:
+            url = "http://example.com"
+            data = {"url": url}
+            response = client.get('/predict', query_string=data) 
+            mock_post.assert_called_once_with(model_url, json=data, timeout=30)
+            assert response.status_code == 200
+            feedback_given = f'{feedback_given} This will help improve our model.'
+        
+        response = app.test_client().get('/feedback', query_string=fb_data)
         mock_render.return_value = "index.html content"
-        mock_render.assert_called_once_with(
+        mock_render.assert_called_with(
             "index.html",
             inputDisplay="",
             result="",
-            feedback="Thank you for your feedback!",
+            feedback=feedback_given,
             version=ver,
         )
         assert correct_predictions._value.get() == 1
         assert model_accuracy._value.get() == 1.0
 
-
-# def test_feedback_route_incorrect():
-#     """
-#     Testing feedback route
-#     """
-#     correct_predictions._value.set(0)
-#     incorrect_predictions._value.set(0)
-#     model_accuracy.set(0)
-#     data = {"prediction_feedback": "incorrect"}
-#     response = app.test_client().get('/feedback', query_string=data)
-
-#     assert incorrect_predictions._value.get() == 1
-#     assert model_accuracy._value.get() == 0.0
-#     assert response.data.decode() == "Thank you for your feedback!"
-
-def test_feedback_route_incorrect():
+@patch('requests.post')
+def test_feedback_route_incorrect(mock_post, client):
     """
     Testing feedback route
     """
@@ -209,15 +208,27 @@ def test_feedback_route_incorrect():
     incorrect_predictions._value.set(0)
     model_accuracy.set(0)
     data = {"prediction_feedback": "incorrect"}
+    mock_response = Mock()
+    mock_response.json.return_value = {"prediction": [[0.6]]}
+    mock_post.return_value = mock_response
+    feedback_given = "Thank you for your feedback!"
 
     with patch("server.render_template") as mock_render:
+        if beta_test:
+            url = "http://example.com"
+            data = {"url": url}
+            response = client.get('/predict', query_string=data) 
+            mock_post.assert_called_once_with(model_url, json=data, timeout=30)
+            assert response.status_code == 200
+            feedback_given = f'{feedback_given} This will help improve our model.'
+
         response = app.test_client().get('/feedback', query_string=data)
         mock_render.return_value = "index.html content"
-        mock_render.assert_called_once_with(
+        mock_render.assert_called_with(
             "index.html",
             inputDisplay="",
             result="",
-            feedback="Thank you for your feedback!",
+            feedback=feedback_given,
             version=ver,
         )
         assert incorrect_predictions._value.get() == 1

@@ -6,58 +6,20 @@ import psutil
 import requests
 from flask import Flask, render_template, request, Response
 from libversion import version_util
-from prometheus_client import (Counter,
-                               Histogram,
-                               Summary,
-                               Gauge,
-                               generate_latest,
+from prometheus_client import (generate_latest,
                                CONTENT_TYPE_LATEST)
+from metrics_init import *
 
 # load class
 lv = version_util.VersionUtil()
 ver = lv.get_version()
 
-# get environment variables from docker ran command
+# get environment variables 
 model_url = os.getenv('MODEL_URL', 'http://localhost:5000/predict')
 model_url_beta = os.getenv('MODEL_URL_BETA', 'http://localhost:5000/predict')
-beta_test = os.getenv('BETA_TEST_FLAG', False)
+beta_test = os.getenv('BETA_TEST_FLAG', "False") == "True"
 
 print(f"Using model_url: {model_url}")
-
-num_pred_requests = Counter('prediction_requests_total',
-                            'Total number of prediction requests')
-index_requests = Counter('flask_app_index_requests_total',
-                         'Total number of requests to the index page')
-errored_requests = Counter('error_requests_total',
-                           'Total number of requests that errored out')
-correct_predictions = Counter('correct_predictions',
-                              'Total number of requests giving \
-                                correct prediction')
-incorrect_predictions = Counter('incorrect_predictions',
-                                'Total number of requests giving \
-                                    incorrect prediction')
-cpu_usage = Gauge('cpu_usage',
-                  'CPU usage of app')
-memory_usage = Gauge('memory_usage',
-                     'Memory usage of app')
-model_accuracy = Gauge('model_accuracy',
-                       'Measure of prediction accuracy based on feedback')
-request_duration_histogram = Histogram(
-    'flask_app_request_duration_seconds',
-    'Histogram for request duration in seconds')
-request_duration_summary = Summary(
-    'flask_app_request_duration_seconds_summary',
-    'Summary for request duration in seconds')
-
-if beta_test:
-    beta_correct_predictions = Counter('beta_correct_predictions',
-                              'Total number of requests giving \
-                                correct prediction to beta')
-    beta_incorrect_predictions = Counter('beta_incorrect_predictions',
-                                    'Total number of requests giving \
-                                        incorrect prediction to beta')
-    beta_model_accuracy = Gauge('beta_model_accuracy',
-                        'Measure of prediction accuracy of beta model based on feedback')
 
 # load frontend
 app = Flask(__name__)
@@ -71,10 +33,13 @@ def index():
     Returns: The default web template.
     '''
     index_requests.inc()
+    result_tx = ""
+    if beta_test:
+        result_tx = "This app will test our beta model too"
     return render_template(
         "index.html",
         inputDisplay="",
-        result="",
+        result=result_tx,
         feedback="",
         version=ver
     )
@@ -91,7 +56,7 @@ def predict():
     data = {"url": url}
     start_time = time.time()
     try:
-        response = requests.post(model_url, json=data, timeout=10)
+        response = requests.post(model_url, json=data, timeout=30)
         response_request = response.json()
         duration = time.time() - start_time
         request_duration_histogram.observe(duration)
@@ -126,6 +91,7 @@ def feedback():
     user_feedback = request.args.get("prediction_feedback") == "correct"
     result = request.args.get("result") == "The provided input is a phishing URL!"
     was_phishing = (user_feedback and result) or (not user_feedback and not result)
+    feedback_given = "Thank you for your feedback!"
 
     if user_feedback:
         correct_predictions.inc()
@@ -141,7 +107,7 @@ def feedback():
         # Need to run for beta model-service
         url = request.args.get("url")
         data = {"url": url}
-        response = requests.post(model_url_beta, json=data, timeout=10)
+        response = requests.post(model_url_beta, json=data, timeout=30)
         response_request = response.json()
         if response_request["prediction"]:
             if (response_request["prediction"][0][0] > 0.5 and was_phishing) \
@@ -154,12 +120,13 @@ def feedback():
                 (correct_predictions._value.get()
                  + incorrect_predictions._value.get())
             beta_model_accuracy.set(accuracy)
+        feedback_given = f'{feedback_given} This will help improve our model.'
                 
     return render_template(
         "index.html",
         inputDisplay="",
         result="",
-        feedback="Thank you for your feedback!",
+        feedback=feedback_given,
         version=ver
     )
 
