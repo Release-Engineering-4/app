@@ -30,22 +30,14 @@
     <p id="result"><strong>Result:</strong> {{ result }}</p>
 
     <div>
-        Is this result not correct? Help us improve the model by letting us know what it should've been!
+        Is this result not correct? Help us improve the model by letting us know!
     </div>
-    <!-- <div>
-        <form action="/url_was_phishing" style="display: inline;">
-            <button type="submit">URL was phishing</button>
-        </form>
-        <form action="/url_was_legit" style="display: inline;">
-            <button type="submit">URL was legit</button>
-        </form>
-    </div> -->
     <div>
         <form action="/feedback">
             <input type="radio" id="correct" name="prediction_feedback" value="correct">
             <label for="correct">Prediction was correct</label><br>
             <input type="radio" id="incorrect" name="prediction_feedback" value="incorrect">
-            <label for="incorrect">Prediction was incorrect</label><br>
+            <label for="incorrect">Prediction was incorrect</label><br><br>
             <button type="submit">Submit Feedback</button>
         </form>
     </div>

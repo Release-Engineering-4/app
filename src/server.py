@@ -63,6 +63,7 @@ def index():
         "index.html",
         inputDisplay="",
         result="",
+        feedback="",
         version=ver
     )
 
@@ -120,7 +121,13 @@ def feedback():
         (correct_predictions._value.get()
          + incorrect_predictions._value.get())
     model_accuracy.set(accuracy)
-    return "Thank you for your feedback!"
+    return render_template(
+        "index.html",
+        inputDisplay="",
+        result="",
+        feedback="Thank you for your feedback!",
+        version=ver
+    )
 
 
 @app.route('/metrics')
