@@ -57,7 +57,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 ```
 
-Now you can install the Prometheus Stack with:
+Now you can install the Prometheus Stack with: 
 
 ```bash
 helm install myprom prom-repo/kube-prometheus-stack
