@@ -13,22 +13,16 @@ This repository contains the web application for the URL phishing project.
 
 Follow the steps below to run the application in a docker container.
 
-To build the docker image use:
+To pull the latest docker image use:
 
 ```bash
-   docker build -t image-name .   
+   docker pull ghcr.io/release-engineering-4/app:main.main.latest  
 ```
 
-To run the docker container use:
+To run the docker container and pass the URL of the model-service as an environment vairable use:
 
 ```bash
-   docker run --name container-name -d -p 8080:8080 image-name   
-```
-
-To pass the URL of the model-service as an environment vairable use:
-
-```bash
-   docker run --name container-name -d -p 8080:8080 -e MODEL_URL=url-here image-name   
+   docker run --name container-name -d -p 8080:8080 -e MODEL_URL=url-here ghcr.io/release-engineering-4/app:main.main.latest
 ```
 
 The app page is hosted on the following URL:`http://localhost:8080/`. This URl isonly valid if you mapped the ports as `-p 8080:8080` when running the docker run command.
@@ -57,7 +51,7 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 ```
 
-Now you can install the Prometheus Stack with: 
+Now you can install the Prometheus Stack with:
 
 ```bash
 helm install myprom prom-repo/kube-prometheus-stack
@@ -84,3 +78,29 @@ Metrics of type Gauge, Counter, Histogram and Summary are defined. They monitor 
 Alerting based on number of errored requests is to be set up. If the number exceeds a certain threshold, it implies that there is an issue with the ```app``` service and needs immediate fixing, thus an email alert will be configured. Alert can be tested by disabling the ```model-service```.
 
 The app asks the user to input whether the prediction given by our service was correct or incorrect. Metrics for prediction accuracy are also created to keep track of this. Based on this accuracy metric, we can find out the real-time effectiveness of the model. The Istio Service mesh for traffic management will divert portion of the traffic to the app which uses another fine-tuned version of the model. The accuracy for both models can thus be compared to see which performs better for user requests.
+
+# Testing 
+
+To run the tests for the pre-processing library use:
+
+```bash
+pytest
+```
+
+To run the tests with coverage for the pre-processing library use:
+
+```bash
+coverage run -m pytest
+```
+
+To generate the coverage report use:
+
+```bash
+coverage report -m -i
+```
+
+To generate the html of the coverage report use:
+
+```bash
+coverage html -i
+```
