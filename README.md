@@ -81,6 +81,23 @@ Run this command in a separate terminal and keep it open to be able to access th
 
 Metrics of type Gauge, Counter, Histogram and Summary are defined. They monitor the app usage in number of visits, number of errored requests, cpu and memory usage. These metrics are available on the ```/metrics``` endpoint and are also visible on Prometheus.
 
-Alerting based on number of errored requests is to be set up. If the number exceeds a certain threshold, it implies that there is an issue with the ```app``` service and needs immediate fixing, thus an email alert will be configured. Alert can be tested by disabling the ```model-service```.
+The following PromQL queries can be used for monitoring the app:
+
+1. To monitor model service, error_requests indicate that service is not working, while the correct and incorrect requests help view rate of model correctness.
+```bash
+sum(rate(correct_predictions[5m]))
+sum(rate(incorrect_predictions[5m]))
+sum(rate(error_requests_total[5m]))
+```
+
+2. To monitor activity on app
+```bash
+sum(rate(prediction_requests_total[5m]))/sum(rate(flask_app_index_requests_total[5m]))
+histogram_quantile(0.9, sum(rate(flask_app_request_duration_seconds_bucket[5m])) by (le))
+sum(rate(flask_app_request_duration_seconds_summary_sum[5m])) / sum(rate(flask_app_request_duration_seconds_summary_count[5m]))
+avg(cpu_usage{container="app-api"})
+avg(memory_usage{container="app-api"})
+```
+
 
 The app asks the user to input whether the prediction given by our service was correct or incorrect. Metrics for prediction accuracy are also created to keep track of this. Based on this accuracy metric, we can find out the real-time effectiveness of the model. The Istio Service mesh for traffic management will divert portion of the traffic to the app which uses another fine-tuned version of the model. The accuracy for both models can thus be compared to see which performs better for user requests.
